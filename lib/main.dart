@@ -3,7 +3,6 @@
  * @author Patrick Mutwiri <dev@patric.xyz> on 1/27/25, 10:49PM
  *
  */
-
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
@@ -150,6 +149,42 @@ class _HomePageState extends State<HomePage> {
             onPressed: _viewCart,
           )
         ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.blue,
+              ),
+              child: Text(
+                'Menu',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                ),
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.home),
+              title: Text('Home'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.shopping_cart),
+              title: Text('Cart'),
+              onTap: _viewCart,
+            ),
+            ListTile(
+              leading: Icon(Icons.payment),
+              title: Text('Checkout'),
+              onTap: _goToCheckout,
+            ),
+          ],
+        ),
       ),
       body: _products.isEmpty
           ? Center(child: CircularProgressIndicator())
