@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:flutter/services.dart';
 
 void main() {
   runApp(EcommerceApp());
@@ -9,9 +11,9 @@ class EcommerceApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'E-commerce Mock',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      theme: ThemeData.light(),
+      darkTheme: ThemeData.dark(),
+      themeMode: ThemeMode.system,
       home: AuthPage(),
     );
   }
@@ -89,25 +91,24 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
-  final List<String> _categories = ['Electronics', 'Clothing', 'Home', 'Books', 'Beauty'];
+  List<dynamic> _products = [];
+  List<Map<String, dynamic>> _cart = [];
 
-  final List<Map<String, String>> _products = [
-    {'title': 'Smartphone', 'price': '\$999', 'image': 'https://via.placeholder.com/150'},
-    {'title': 'Laptop', 'price': '\$1299', 'image': 'https://via.placeholder.com/150'},
-    {'title': 'Headphones', 'price': '\$199', 'image': 'https://via.placeholder.com/150'},
-    {'title': 'Sneakers', 'price': '\$149', 'image': 'https://via.placeholder.com/150'},
-    {'title': 'Blender', 'price': '\$79', 'image': 'https://via.placeholder.com/150'},
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadProducts();
+  }
 
-  List<Map<String, String>> _cart = [];
-
-  void _onItemTapped(int index) {
+  Future<void> _loadProducts() async {
+    final String response = await rootBundle.loadString('assets/products.json');
+    final data = await json.decode(response);
     setState(() {
-      _selectedIndex = index;
+      _products = data["products"];
     });
   }
 
-  void _addToCart(Map<String, String> product) {
+  void _addToCart(Map<String, dynamic> product) {
     setState(() {
       _cart.add(product);
     });
@@ -124,98 +125,11 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildDrawer() {
-    return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          DrawerHeader(
-            decoration: BoxDecoration(
-              color: Colors.blue,
-            ),
-            child: Text(
-              'Menu',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-              ),
-            ),
-          ),
-          ListTile(
-            leading: Icon(Icons.category),
-            title: Text('Categories'),
-            onTap: () {},
-          ),
-          ListTile(
-            leading: Icon(Icons.shopping_cart),
-            title: Text('Cart'),
-            onTap: _viewCart,
-          ),
-          ListTile(
-            leading: Icon(Icons.account_circle),
-            title: Text('Profile'),
-            onTap: () {},
-          ),
-          ListTile(
-            leading: Icon(Icons.settings),
-            title: Text('Settings'),
-            onTap: () {},
-          ),
-        ],
+  void _goToCheckout() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => CheckoutPage(cart: _cart),
       ),
-    );
-  }
-
-  Widget _buildProductList() {
-    return GridView.builder(
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 0.8,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-      ),
-      padding: EdgeInsets.all(10),
-      itemCount: _products.length,
-      itemBuilder: (context, index) {
-        final product = _products[index];
-        return Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          elevation: 4,
-          child: Column(
-            children: [
-              Expanded(
-                child: Image.network(
-                  product['image']!,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  product['title']!,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-              Text(
-                product['price']!,
-                style: TextStyle(
-                  color: Colors.green,
-                  fontSize: 14,
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () => _addToCart(product),
-                child: Text('Add to Cart'),
-              ),
-              SizedBox(height: 10),
-            ],
-          ),
-        );
-      },
     );
   }
 
@@ -224,47 +138,71 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('E-commerce Mock'),
-      ),
-      drawer: _buildDrawer(),
-      body: Column(
-        children: [
-          Container(
-            height: 60,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _categories.length,
-              itemBuilder: (context, index) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                  child: ChoiceChip(
-                    label: Text(_categories[index]),
-                    selected: _selectedIndex == index,
-                    onSelected: (selected) {
-                      setState(() {
-                        _selectedIndex = index;
-                      });
-                    },
-                  ),
-                );
-              },
-            ),
-          ),
-          Expanded(
-            child: _buildProductList(),
-          ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.shopping_cart),
+            onPressed: _viewCart,
+          )
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _viewCart,
-        child: Icon(Icons.shopping_cart),
-        tooltip: 'View Cart',
+      body: _products.isEmpty
+          ? Center(child: CircularProgressIndicator())
+          : GridView.builder(
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          childAspectRatio: 0.8,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+        ),
+        padding: EdgeInsets.all(10),
+        itemCount: _products.length,
+        itemBuilder: (context, index) {
+          final product = _products[index];
+          return Card(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            elevation: 4,
+            child: Column(
+              children: [
+                Expanded(
+                  child: Image.network(
+                    product['image'],
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    product['title'],
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                Text(
+                  '\$${product['price']}',
+                  style: TextStyle(
+                    color: Colors.green,
+                    fontSize: 14,
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () => _addToCart(product),
+                  child: Text('Add to Cart'),
+                ),
+                SizedBox(height: 10),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
 }
 
 class CartPage extends StatelessWidget {
-  final List<Map<String, String>> cart;
+  final List<Map<String, dynamic>> cart;
 
   CartPage({required this.cart});
 
@@ -281,16 +219,91 @@ class CartPage extends StatelessWidget {
           style: TextStyle(fontSize: 18),
         ),
       )
-          : ListView.builder(
-        itemCount: cart.length,
-        itemBuilder: (context, index) {
-          final product = cart[index];
-          return ListTile(
-            leading: Image.network(product['image']!),
-            title: Text(product['title']!),
-            subtitle: Text(product['price']!),
-          );
-        },
+          : Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              itemCount: cart.length,
+              itemBuilder: (context, index) {
+                final product = cart[index];
+                return ListTile(
+                  leading: Image.network(product['image']),
+                  title: Text(product['title']),
+                  subtitle: Text('\$${product['price']}'),
+                );
+              },
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => CheckoutPage(cart: cart),
+                ),
+              );
+            },
+            child: Text('Proceed to Checkout'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class CheckoutPage extends StatelessWidget {
+  final List<Map<String, dynamic>> cart;
+
+  CheckoutPage({required this.cart});
+
+  @override
+  Widget build(BuildContext context) {
+    double total = cart.fold(0, (sum, item) => sum + item['price']);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Checkout'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Order Summary',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 10),
+            Expanded(
+              child: ListView.builder(
+                itemCount: cart.length,
+                itemBuilder: (context, index) {
+                  final product = cart[index];
+                  return ListTile(
+                    title: Text(product['title']),
+                    trailing: Text('\$${product['price']}'),
+                  );
+                },
+              ),
+            ),
+            Divider(),
+            Text(
+              'Total: \$${total.toStringAsFixed(2)}',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Order placed successfully!')),
+                );
+                Navigator.of(context).popUntil((route) => route.isFirst);
+              },
+              child: Center(
+                child: Text('Place Order'),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
