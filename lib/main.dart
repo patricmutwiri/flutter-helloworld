@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2025.
+ * @author Patrick Mutwiri <dev@patric.xyz> on 1/27/25, 10:49PM
+ *
+ */
+
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
