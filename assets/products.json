@@ -1,0 +1,52 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "title": "Wireless Headphones",
+      "price": 59.99,
+      "image": "https://via.placeholder.com/150/92c952"
+    },
+    {
+      "id": 2,
+      "title": "Smartphone",
+      "price": 699.99,
+      "image": "https://via.placeholder.com/150/771796"
+    },
+    {
+      "id": 3,
+      "title": "Laptop",
+      "price": 999.99,
+      "image": "https://via.placeholder.com/150/24f355"
+    },
+    {
+      "id": 4,
+      "title": "Gaming Console",
+      "price": 499.99,
+      "image": "https://via.placeholder.com/150/d32776"
+    },
+    {
+      "id": 5,
+      "title": "Smartwatch",
+      "price": 199.99,
+      "image": "https://via.placeholder.com/150/f66b97"
+    },
+    {
+      "id": 6,
+      "title": "Wireless Mouse",
+      "price": 29.99,
+      "image": "https://via.placeholder.com/150/56a8c2"
+    },
+    {
+      "id": 7,
+      "title": "Bluetooth Speaker",
+      "price": 89.99,
+      "image": "https://via.placeholder.com/150/b0f7cc"
+    },
+    {
+      "id": 8,
+      "title": "4K TV",
+      "price": 1299.99,
+      "image": "https://via.placeholder.com/150/54176f"
+    }
+  ]
+}
