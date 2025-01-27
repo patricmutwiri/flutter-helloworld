@@ -12,7 +12,72 @@ class EcommerceApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: HomePage(),
+      home: AuthPage(),
+    );
+  }
+}
+
+class AuthPage extends StatefulWidget {
+  @override
+  _AuthPageState createState() => _AuthPageState();
+}
+
+class _AuthPageState extends State<AuthPage> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _isLogin = true;
+
+  void _toggleAuthMode() {
+    setState(() {
+      _isLogin = !_isLogin;
+    });
+  }
+
+  void _authenticate() {
+    final email = _emailController.text;
+    final password = _passwordController.text;
+
+    if (email.isNotEmpty && password.isNotEmpty) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => HomePage()),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please fill in all fields')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(_isLogin ? 'Login' : 'Sign Up')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextField(
+              controller: _emailController,
+              decoration: InputDecoration(labelText: 'Email'),
+            ),
+            TextField(
+              controller: _passwordController,
+              decoration: InputDecoration(labelText: 'Password'),
+              obscureText: true,
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _authenticate,
+              child: Text(_isLogin ? 'Login' : 'Sign Up'),
+            ),
+            TextButton(
+              onPressed: _toggleAuthMode,
+              child: Text(_isLogin ? 'Don\'t have an account? Sign Up' : 'Already have an account? Login'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -34,10 +99,29 @@ class _HomePageState extends State<HomePage> {
     {'title': 'Blender', 'price': '\$79', 'image': 'https://via.placeholder.com/150'},
   ];
 
+  List<Map<String, String>> _cart = [];
+
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+  void _addToCart(Map<String, String> product) {
+    setState(() {
+      _cart.add(product);
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${product['title']} added to cart')),
+    );
+  }
+
+  void _viewCart() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => CartPage(cart: _cart),
+      ),
+    );
   }
 
   Widget _buildDrawer() {
@@ -65,7 +149,7 @@ class _HomePageState extends State<HomePage> {
           ListTile(
             leading: Icon(Icons.shopping_cart),
             title: Text('Cart'),
-            onTap: () {},
+            onTap: _viewCart,
           ),
           ListTile(
             leading: Icon(Icons.account_circle),
@@ -123,6 +207,10 @@ class _HomePageState extends State<HomePage> {
                   fontSize: 14,
                 ),
               ),
+              ElevatedButton(
+                onPressed: () => _addToCart(product),
+                child: Text('Add to Cart'),
+              ),
               SizedBox(height: 10),
             ],
           ),
@@ -167,9 +255,42 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: _viewCart,
         child: Icon(Icons.shopping_cart),
         tooltip: 'View Cart',
+      ),
+    );
+  }
+}
+
+class CartPage extends StatelessWidget {
+  final List<Map<String, String>> cart;
+
+  CartPage({required this.cart});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Your Cart'),
+      ),
+      body: cart.isEmpty
+          ? Center(
+        child: Text(
+          'Your cart is empty',
+          style: TextStyle(fontSize: 18),
+        ),
+      )
+          : ListView.builder(
+        itemCount: cart.length,
+        itemBuilder: (context, index) {
+          final product = cart[index];
+          return ListTile(
+            leading: Image.network(product['image']!),
+            title: Text(product['title']!),
+            subtitle: Text(product['price']!),
+          );
+        },
       ),
     );
   }
